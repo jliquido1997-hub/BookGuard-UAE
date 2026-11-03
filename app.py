@@ -1,8 +1,19 @@
+# ============================================================
+# BOOKGUARD UAE
+# Automated E-Book Content Screening System
+# Version 3.0
+# ============================================================
+
 import streamlit as st
 import pymupdf
 import pandas as pd
 import re
 from io import BytesIO
+from collections import Counter
+
+# ============================================================
+# 1. STREAMLIT PAGE CONFIGURATION
+# ============================================================
 
 st.set_page_config(
     page_title="BookGuard UAE",
@@ -14,27 +25,35 @@ st.title("📚 BookGuard UAE")
 st.subheader("Automated E-Book Content Screening System")
 
 st.info(
-    "This application identifies predefined keywords "
-    "for librarian review. Results do not establish "
-    "whether a book complies with UAE regulations."
+    "BookGuard UAE identifies predefined keywords and phrases "
+    "in PDF e-books for contextual review by librarians. "
+    "Keyword matches do not establish that a book is "
+    "inappropriate or non-compliant with UAE regulations."
 )
 
-keywords = {
-  
+# ============================================================
+# 2. KEYWORD PROCESSING FUNCTION
+# ============================================================
+
 def make_keywords(text):
-   return list (dict.fromkeys(
-        word.strip ()
-        for word in text.split (",")
-        if word.strip ()
+    """
+    Convert comma-separated text into a list of keywords.
+    Remove duplicate entries within each category.
+    """
+    return list(dict.fromkeys(
+        word.strip()
+        for word in text.split(",")
+        if word.strip()
     ))
 
 
+# ============================================================
+# 3. MASTER KEYWORD DATABASE
+# ============================================================
+
 keywords = {
 
-    # ========================================================
-    # 1. SEXUAL CONTENT AND NUDITY
-    # ========================================================
-
+    # CATEGORY 1
     "1. Sexual Content and Nudity": make_keywords("""
     sex, sexual, sexuality, sexualised, sexualized,
     sexualisation, sexualization, naked, nude, nudity,
@@ -53,11 +72,7 @@ keywords = {
     inappropriate touching, indecent exposure
     """),
 
-
-    # ========================================================
-    # 2. RELATIONSHIPS, ROMANCE, GENDER AND LGBTQ+ THEMES
-    # ========================================================
-
+    # CATEGORY 2
     "2. Relationships, Romance, Gender and LGBTQ+ Themes": make_keywords("""
     gay, lesbian, bisexual, homosexual, homosexuality,
     LGBTQ, LGBTQ+, LGBT, transgender, transsexual,
@@ -73,45 +88,8 @@ keywords = {
     homophobia, transphobia, gender discrimination
     """),
 
-
-    # ========================================================
-    # 3. RELIGION AND RELIGIOUS SENSITIVITY
-    # ========================================================
-
-    "3. Religion and Religious Sensitivity": make_keywords("""
-    Allah, God, gods, goddess, deity, divine, Quran,
-    Qur'an, Koran, Islam, Islamic, Muslim,
-    Prophet Muhammad, prophet, prophecy, prayer,
-    pray, praying, worship, worshipping, scripture,
-    sacred, holy, holiness, blessing, blessed,
-    blasphemy, blasphemous, atheist, atheism,
-    apostasy, heresy, sacrilege, idolatry, idol,
-    religious conversion, religious criticism,
-    religious satire, religious insult,
-    religious discrimination, religious symbol,
-    religious clothing, religious ceremony,
-    religious ritual, proselytising, proselytizing,
-    polytheism, monotheism, temple, mosque,
-    church, chapel, cathedral, shrine, monastery,
-    altar, priest, pastor, minister, monk, nun,
-    rabbi, imam, preacher, sermon, chanting,
-    chant, chanted, hymn, hymns, miracle, omen,
-    evil, devil, Satan, satanic, demon, witchcraft,
-    occult, paganism, pagan, Christianity,
-    Christian, Catholic, Protestant, Bible,
-    New Testament, Old Testament, Hinduism,
-    Hindu, Buddhism, Buddhist, Sikhism, Sikh,
-    Jainism, Jain, Mormon, Jehovah's Witness,
-    sectarianism, religious extremism, mock,
-    mocked, mocking, mockery, ridicule,
-    religious mockery
-    """),
-
-
-    # ========================================================
-    # 4. CHRISTMAS, HOLIDAYS AND CELEBRATIONS
-    # ========================================================
-
+    # CATEGORY 3
+    # CATEGORY 4
     "4. Christmas, Holidays and Celebrations": make_keywords("""
     Christmas, Xmas, Santa Claus, Santa,
     Father Christmas, Saint Nicholas,
@@ -132,11 +110,7 @@ keywords = {
     religious festival, religious celebration
     """),
 
-
-    # ========================================================
-    # 5. JUDAISM, JEWISH IDENTITY, ISRAEL AND REGIONAL POLITICS
-    # ========================================================
-
+    # CATEGORY 5
     "5. Judaism, Jewish Identity, Israel and Regional Political References": make_keywords("""
     Judaism, Jewish, Jew, Jews, Israel, Israeli,
     Jerusalem, Zionism, Zionist, Zionists,
@@ -152,11 +126,7 @@ keywords = {
     settlement, territorial dispute
     """),
 
-
-    # ========================================================
-    # 6. ANIMALS, PORK AND DIETARY RESTRICTIONS
-    # ========================================================
-
+    # CATEGORY 6
     "6. Animals, Pork and Dietary Restrictions": make_keywords("""
     pig, pigs, piglet, piglets, piggy, pigsty,
     pork, bacon, ham, ham sandwich, ham hock,
@@ -171,11 +141,7 @@ keywords = {
     dietary restriction, animal slaughter
     """),
 
-
-    # ========================================================
-    # 7. DRUGS, ALCOHOL, TOBACCO AND SMOKING
-    # ========================================================
-
+    # CATEGORY 7
     "7. Drugs, Alcohol, Tobacco and Smoking": make_keywords("""
     alcohol, alcoholic, alcohol consumption,
     wine, beer, ale, lager, cider, whiskey,
@@ -199,11 +165,7 @@ keywords = {
     narcotics, fermentation
     """),
 
-
-    # ========================================================
-    # 8. CANNIBALISM, BODY HORROR AND DISTURBING CONTENT
-    # ========================================================
-
+    # CATEGORY 8
     "8. Cannibalism, Body Horror and Disturbing Content": make_keywords("""
     cannibal, cannibals, cannibalism, cannibalistic,
     human flesh, eating human flesh, human sacrifice,
@@ -217,11 +179,7 @@ keywords = {
     skeleton, skull, bones, burial remains
     """),
 
-
-    # ========================================================
-    # 9. DISEASES, VIRUSES AND PUBLIC HEALTH
-    # ========================================================
-
+    # CATEGORY 9
     "9. Diseases, Viruses and Public Health": make_keywords("""
     COVID, COVID-19, coronavirus, SARS-CoV-2,
     pandemic, epidemic, HIV, AIDS, HIV-positive,
@@ -239,47 +197,8 @@ keywords = {
     organ transplant
     """),
 
-
-    # ========================================================
-    # 10. VIOLENCE, WEAPONS, WAR AND CRIME
-    # ========================================================
-
-    "10. Violence, Weapons, War and Crime": make_keywords("""
-    murder, murderer, murdered, kill, killed,
-    killer, killing, blood, bloody, bloodshed,
-    gore, gory, torture, tortured, rape,
-    sexual assault, abuse, physical abuse,
-    suicide, suicidal, self-harm, cutting,
-    gun, pistol, rifle, shotgun, firearm,
-    bullet, ammunition, knife, dagger, sword,
-    blade, stabbing, stabbed, shooting, shot,
-    bomb, bombing, explosion, explosive,
-    terrorism, terrorist, extremism,
-    radicalisation, radicalization, war,
-    warfare, battle, battlefield, military,
-    soldier, combat, fighting, fight,
-    attack, attacked, assault, violence,
-    violent, landmine, grenade, missile,
-    chemical weapon, biological weapon,
-    nuclear weapon, genocide, war crime,
-    hostage, kidnapping, abducted, abduction,
-    execution, assassination, strangulation,
-    beating, domestic abuse, child exploitation,
-    coercion, threat, threatening, blackmail,
-    harassment, honour killing, honor killing,
-    massacre, slaughter, mutilation, revenge,
-    revenge killing, poison, poisoned, poisoning,
-    drowning, suffocation, imprisonment,
-    prison, jail, criminal, crime, theft,
-    robbery, stealing, burglar, burglary,
-    vandalism
-    """),
-
-
-    # ========================================================
-    # 11. PROFANITY, INSULTS AND OFFENSIVE LANGUAGE
-    # ========================================================
-
+    # CATEGORY 10
+    # CATEGORY 11
     "11. Profanity, Insults and Offensive Language": make_keywords("""
     damn, damned, hell, bloody hell, shit,
     bullshit, fuck, fucking, bitch, bastard,
@@ -296,11 +215,7 @@ keywords = {
     abusive language
     """),
 
-
-    # ========================================================
-    # 12. POLITICAL AND IDEOLOGICAL CONTENT
-    # ========================================================
-
+    # CATEGORY 12
     "12. Political and Ideological Content": make_keywords("""
     communism, communist, fascism, fascist,
     Nazism, Nazi, Hitler, extremist, radical,
@@ -321,58 +236,8 @@ keywords = {
     coup, civil war, political conflict
     """),
 
-
-    # ========================================================
-    # 13. OCCULT, PARANORMAL AND SUPERNATURAL THEMES
-    # ========================================================
-
-    "13. Occult, Paranormal, Fortune-Telling and Supernatural Themes": make_keywords("""
-    spell, spells, spellbook, spellcasting,
-    witch, witches, witchcraft, wizard, wizardry,
-    warlock, sorcerer, sorceress, sorcery,
-    magician, magic, magical, enchantment,
-    enchanted, enchantress, charm, charms,
-    potion, potions, magic wand, wand,
-    broomstick, demon, demonic, devil,
-    Satan, satanic, evil, evil spirit,
-    evil eye, evil force, dark force,
-    dark magic, summoning, summon,
-    ritual, rituals, chanting, chant,
-    chanted, incantation, incantations,
-    necromancy, exorcism, possession,
-    possessed, voodoo, hoodoo, black magic,
-    white magic, dark arts, occult, occultism,
-    fortune teller, fortune-teller,
-    fortune telling, fortune-telling,
-    fortuneteller, psychic, psychic reading,
-    palm reading, palmistry, tarot,
-    tarot cards, crystal ball, divination,
-    soothsayer, seer, clairvoyant, medium,
-    mediumship, séance, seance, channeling,
-    channelling, astrology, astrologer,
-    horoscope, zodiac, star sign, omen,
-    omens, prophecy, prophecy reading,
-    prediction, supernatural, paranormal,
-    supernatural power, supernatural being,
-    supernatural creature, spirit, spirits,
-    spirit world, ghost, ghosts, ghostly,
-    haunted, haunting, haunt, phantom,
-    apparition, poltergeist, spectre,
-    specter, banshee, vampire, werewolf,
-    zombie, undead, monster, monstrous,
-    curse, cursed, curses, hex, hexed,
-    jinx, jinxed, superstition, superstitious,
-    talisman, amulet, mystical, mysticism,
-    mythology, mythological god, goddess,
-    afterlife, reincarnation, resurrection,
-    near-death experience
-    """),
-
-
-    # ========================================================
-    # 14. PREGNANCY, REPRODUCTION AND MARRIAGE
-    # ========================================================
-
+    # CATEGORY 13
+    # CATEGORY 14
     "14. Pregnancy, Reproduction and Marriage": make_keywords("""
     pregnancy, pregnant, childbirth, labour,
     labor, giving birth, abortion, contraception,
@@ -389,11 +254,7 @@ keywords = {
     underage marriage, reproductive rights
     """),
 
-
-    # ========================================================
-    # 15. DEATH, GRIEF AND THE AFTERLIFE
-    # ========================================================
-
+    # CATEGORY 15
     "15. Death, Grief and the Afterlife": make_keywords("""
     death, dying, die, died, dead, dead body,
     deceased, funeral, burial, buried, bury,
@@ -410,11 +271,7 @@ keywords = {
     tragic death, sacrifice
     """),
 
-
-    # ========================================================
-    # 16. GAMBLING AND FINANCIAL MISCONDUCT
-    # ========================================================
-
+    # CATEGORY 16
     "16. Gambling and Financial Misconduct": make_keywords("""
     gambling, gamble, gambler, casino,
     betting, bet, wager, lottery, raffle,
@@ -429,11 +286,7 @@ keywords = {
     financial misconduct, illegal betting
     """),
 
-
-    # ========================================================
-    # 17. FAMILY, ABUSE, BULLYING AND SOCIAL ISSUES
-    # ========================================================
-
+    # CATEGORY 17
     "17. Family, Abuse, Bullying and Social Issues": make_keywords("""
     child abuse, domestic violence, domestic abuse,
     bullying, bully, bullied, harassment,
@@ -455,11 +308,7 @@ keywords = {
     cruelty, cruel, prejudice, prejudiced
     """),
 
-
-    # ========================================================
-    # 18. HEALTH, MENTAL HEALTH AND BODILY FUNCTIONS
-    # ========================================================
-
+    # CATEGORY 18
     "18. Health, Mental Health and Bodily Functions": make_keywords("""
     mental illness, mental health, depression,
     depressed, anxiety, anxious, panic attack,
@@ -480,11 +329,7 @@ keywords = {
     wound, wound infection
     """),
 
-
-    # ========================================================
-    # 19. CULTURAL, RACIAL, ETHNIC AND IDENTITY SENSITIVITIES
-    # ========================================================
-
+    # CATEGORY 19
     "19. Cultural, Racial, Ethnic and Identity Sensitivities": make_keywords("""
     cultural appropriation, religious satire,
     stereotype, stereotyping, sacred object,
@@ -506,11 +351,7 @@ keywords = {
     offensive cultural description
     """),
 
-
-    # ========================================================
-    # 20. ADDITIONAL SENSITIVE REFERENCES AND MATURE THEMES
-    # ========================================================
-
+    # CATEGORY 20
     "20. Additional Sensitive References and Mature Themes": make_keywords("""
     seductive, explicit imagery, adult themes,
     mature themes, inappropriate content,
@@ -532,11 +373,7 @@ keywords = {
     controversial subject, sensitive topic
     """),
 
-
-    # ========================================================
-    # 21. FICTION, FAIRY-TALE AND FOLKLORE SCREENING TERMS
-    # ========================================================
-
+    # CATEGORY 21
     "21. Additional Fiction, Fairy-Tale and Folklore Screening Terms": make_keywords("""
     fairy, fairies, fairy godmother, fairy tale,
     faerie, faery, elf, elves, goblin, goblins,
@@ -559,11 +396,7 @@ keywords = {
     underworld, sorcerer's apprentice
     """),
 
-
-    # ========================================================
-    # 22. CULTURAL AND BEHAVIOURAL SCREENING TERMS
-    # ========================================================
-
+    # CATEGORY 22
     "22. Additional Cultural and Behavioural Screening Terms": make_keywords("""
     disrespect, disrespectful, insult, insulting,
     mock, mocking, mockery, ridicule, blaspheme,
@@ -583,9 +416,8 @@ keywords = {
 
 }
 
-
 # ============================================================
-# DATABASE VALIDATION
+# 4. DATABASE STATISTICS
 # ============================================================
 
 total_categories = len(keywords)
@@ -600,147 +432,549 @@ unique_keywords = len({
     for word in words
 })
 
-print("BOOKGUARD UAE MASTER KEYWORD DATABASE")
-print("-----------------------------------")
-print("Screening categories:", total_categories)
-print("Total category keyword entries:", total_keywords)
-print("Unique keywords and phrases:", unique_keywords)
-print("Database loaded successfully!")
-}
+# ============================================================
+# 5. SIDEBAR
+# ============================================================
+
+with st.sidebar:
+
+    st.header("📚 BookGuard UAE")
+
+    st.write("Master Keyword Database")
+
+    st.metric(
+        "Screening Categories",
+        total_categories
+    )
+
+    st.metric(
+        "Keyword Entries",
+        total_keywords
+    )
+
+    st.metric(
+        "Unique Keywords",
+        unique_keywords
+    )
+
+    st.divider()
+
+    st.write("Screening Settings")
+
+    context_length = st.slider(
+        "Context characters",
+        min_value=50,
+        max_value=500,
+        value=150,
+        step=50
+    )
+
+    selected_categories = st.multiselect(
+        "Select Categories",
+        options=list(keywords.keys()),
+        default=list(keywords.keys())
+    )
+
+    st.caption(
+        "Select the categories you want to include "
+        "in the screening."
+    )
+
+# ============================================================
+# 6. PDF UPLOAD
+# ============================================================
+
+st.header("📄 Upload E-Book")
 
 uploaded_file = st.file_uploader(
-    "Upload an E-Book (PDF)",
+    "Select a PDF e-book for content screening",
     type=["pdf"]
 )
 
+# ============================================================
+# 7. KEYWORD MATCHING FUNCTION
+# ============================================================
+
+def create_pattern(keyword):
+
+    parts = keyword.split()
+
+    escaped_parts = [
+        re.escape(part)
+        for part in parts
+    ]
+
+    pattern = (
+        r"(?<!\w)"
+        + r"\s+".join(escaped_parts)
+        + r"(?!\w)"
+    )
+
+    return re.compile(
+        pattern,
+        flags=re.IGNORECASE
+    )
+
+
+# ============================================================
+# 8. PDF SCREENING FUNCTION
+# ============================================================
+
+def screen_pdf(
+    pdf_bytes,
+    selected_categories,
+    context_length
+):
+
+    results = []
+    empty_pages = []
+
+    with pymupdf.open(
+        stream=pdf_bytes,
+        filetype="pdf"
+    ) as document:
+
+        total_pages = len(document)
+
+        progress_bar = st.progress(0)
+
+        for page_index in range(total_pages):
+
+            page = document[page_index]
+
+            text = page.get_text(
+                "text",
+                sort=True
+            )
+
+            if not text.strip():
+
+                empty_pages.append(
+                    page_index + 1
+                )
+
+            for category in selected_categories:
+
+                words = keywords[category]
+
+                for word in words:
+
+                    pattern = create_pattern(word)
+
+                    matches = pattern.finditer(text)
+
+                    for match in matches:
+
+                        start = max(
+                            0,
+                            match.start() - context_length
+                        )
+
+                        end = min(
+                            len(text),
+                            match.end() + context_length
+                        )
+
+                        context = text[start:end]
+
+                        context = re.sub(
+                            r"\s+",
+                            " ",
+                            context
+                        ).strip()
+
+                        results.append({
+
+                            "PDF Page": page_index + 1,
+
+                            "Category": category,
+
+                            "Keyword": word,
+
+                            "Matched Text": match.group(),
+
+                            "Context": context,
+
+                            "Review Status": "Pending Review",
+
+                            "Librarian Remarks": ""
+
+                        })
+
+            progress_bar.progress(
+                (page_index + 1) / total_pages
+            )
+
+    return results, total_pages, empty_pages
+
+
+# ============================================================
+# 9. SCREENING INTERFACE
+# ============================================================
+
 if uploaded_file is not None:
 
-    if st.button("Start Content Screening"):
+    st.success(
+        f"File uploaded: {uploaded_file.name}"
+    )
 
-        results = []
-        pages_without_text = []
+    if st.button(
+        "🔍 Start Content Screening",
+        type="primary"
+    ):
 
-        with st.spinner("Scanning PDF..."):
+        if not selected_categories:
 
-            try:
-                pdf_bytes = uploaded_file.getvalue()
+            st.warning(
+                "Please select at least one category."
+            )
 
-                with pymupdf.open(
-                    stream=pdf_bytes,
-                    filetype="pdf"
-                ) as document:
+        else:
 
-                    total_pages = len(document)
+            with st.spinner(
+                "Scanning PDF. Please wait..."
+            ):
 
-                    for page_index in range(total_pages):
+                try:
 
-                        page = document[page_index]
-                        text = page.get_text()
+                    pdf_bytes = uploaded_file.getvalue()
 
-                        if not text.strip():
-                            pages_without_text.append(
-                                page_index + 1
-                            )
-
-                        for category, words in keywords.items():
-
-                            for word in words:
-
-                                pattern = (
-                                    r"\b"
-                                    + re.escape(word)
-                                    + r"\b"
-                                )
-
-                                for match in re.finditer(
-                                    pattern,
-                                    text,
-                                    re.IGNORECASE
-                                ):
-
-                                    start = max(
-                                        0,
-                                        match.start() - 100
-                                    )
-
-                                    end = min(
-                                        len(text),
-                                        match.end() + 100
-                                    )
-
-                                    context = text[
-                                        start:end
-                                    ].replace("\n", " ")
-
-                                    results.append({
-                                        "PDF Page": page_index + 1,
-                                        "Category": category,
-                                        "Keyword": match.group(),
-                                        "Context": context,
-                                        "Review Status": "Pending Review"
-                                    })
-
-                st.success("Screening completed!")
-
-                st.metric("Pages Processed", total_pages)
-                st.metric("Keyword Matches", len(results))
-
-                if pages_without_text:
-                    st.warning(
-                        f"{len(pages_without_text)} pages "
-                        "contained no extractable text. "
-                        "These pages may require OCR."
+                    results, total_pages, empty_pages = screen_pdf(
+                        pdf_bytes,
+                        selected_categories,
+                        context_length
                     )
 
-                if results:
+                    st.session_state["results"] = results
 
-                    df = pd.DataFrame(results)
+                    st.session_state["total_pages"] = total_pages
 
-                    st.dataframe(
-                        df,
-                        use_container_width=True
+                    st.session_state["empty_pages"] = empty_pages
+
+                    st.session_state["screened_filename"] = (
+                        uploaded_file.name
                     )
 
-                    output = BytesIO()
+                except Exception as error:
 
-                    with pd.ExcelWriter(
-                        output,
-                        engine="openpyxl"
-                    ) as writer:
-
-                        df.to_excel(
-                            writer,
-                            index=False,
-                            sheet_name="Screening Results"
-                        )
-
-                    st.download_button(
-                        label="Download Excel Report",
-                        data=output.getvalue(),
-                        file_name="BookGuard_UAE_Report.xlsx",
-                        mime=(
-                            "application/vnd.openxmlformats-"
-                            "officedocument.spreadsheetml.sheet"
-                        )
+                    st.error(
+                        "The PDF could not be processed. "
+                        "Check whether it is valid, encrypted, "
+                        "or password-protected."
                     )
 
-                else:
-                    st.info(
-                        "No predefined keywords were detected "
-                        "in the extracted text. This does not "
-                        "confirm that the book is suitable."
-                    )
+                    st.exception(error)
 
-            except Exception as error:
-                st.error(
-                    "Unable to process this PDF. "
-                    "Check whether it is valid, "
-                    "encrypted, or password-protected."
+# ============================================================
+# 10. SCREENING RESULTS
+# ============================================================
+
+if "results" in st.session_state:
+
+    results = st.session_state["results"]
+
+    total_pages = st.session_state["total_pages"]
+
+    empty_pages = st.session_state["empty_pages"]
+
+    st.divider()
+
+    st.header("📊 Screening Dashboard")
+
+    st.success(
+        "Content screening completed."
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+
+        st.metric(
+            "Total PDF Pages",
+            total_pages
+        )
+
+    with col2:
+
+        st.metric(
+            "Keyword Matches",
+            len(results)
+        )
+
+    with col3:
+
+        matched_categories = len({
+            result["Category"]
+            for result in results
+        })
+
+        st.metric(
+            "Categories Flagged",
+            matched_categories
+        )
+
+    with col4:
+
+        matched_pages = len({
+            result["PDF Page"]
+            for result in results
+        })
+
+        st.metric(
+            "Pages with Matches",
+            matched_pages
+        )
+
+    if empty_pages:
+
+        st.warning(
+            f"{len(empty_pages)} pages contained "
+            "no extractable text. These pages may "
+            "require OCR."
+        )
+
+    if results:
+
+        df = pd.DataFrame(results)
+
+        # ====================================================
+        # 11. CATEGORY SUMMARY
+        # ====================================================
+
+        st.subheader(
+            "📈 Keyword Matches by Category"
+        )
+
+        category_counts = (
+            df["Category"]
+            .value_counts()
+            .reset_index()
+        )
+
+        category_counts.columns = [
+            "Category",
+            "Matches"
+        ]
+
+        st.bar_chart(
+            category_counts.set_index("Category")
+        )
+
+        # ====================================================
+        # 12. MOST FREQUENT KEYWORDS
+        # ====================================================
+
+        st.subheader(
+            "🔎 Most Frequently Detected Keywords"
+        )
+
+        keyword_counts = (
+            df["Keyword"]
+            .value_counts()
+            .head(20)
+            .reset_index()
+        )
+
+        keyword_counts.columns = [
+            "Keyword",
+            "Occurrences"
+        ]
+
+        st.dataframe(
+            keyword_counts,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # ====================================================
+        # 13. DETAILED RESULTS
+        # ====================================================
+
+        st.subheader(
+            "📋 Detailed Screening Results"
+        )
+
+        filter_category = st.selectbox(
+            "Filter by Category",
+            ["All Categories"]
+            + list(df["Category"].unique())
+        )
+
+        if filter_category == "All Categories":
+
+            filtered_df = df.copy()
+
+        else:
+
+            filtered_df = df[
+                df["Category"] == filter_category
+            ].copy()
+
+        st.dataframe(
+            filtered_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+        # ====================================================
+        # 14. PAGE-BY-PAGE REVIEW
+        # ====================================================
+
+        st.subheader(
+            "📖 Page-by-Page Content Review"
+        )
+
+        pages_with_matches = sorted(
+            df["PDF Page"].unique()
+        )
+
+        selected_page = st.selectbox(
+            "Select PDF Page",
+            pages_with_matches
+        )
+
+        page_results = df[
+            df["PDF Page"] == selected_page
+        ]
+
+        for _, row in page_results.iterrows():
+
+            with st.expander(
+                f"{row['Keyword']} — {row['Category']}"
+            ):
+
+                st.write(
+                    "**Detected Keyword:**",
+                    row["Keyword"]
                 )
+
+                st.write(
+                    "**PDF Page:**",
+                    row["PDF Page"]
+                )
+
+                st.write(
+                    "**Context:**"
+                )
+
+                st.write(
+                    row["Context"]
+                )
+
+                st.info(
+                    "Review this passage in context. "
+                    "A keyword match alone does not "
+                    "determine content suitability."
+                )
+
+        # ====================================================
+        # 15. EXCEL REPORT GENERATION
+        # ====================================================
+
+        st.subheader(
+            "📥 Download Screening Report"
+        )
+
+        output = BytesIO()
+
+        with pd.ExcelWriter(
+            output,
+            engine="openpyxl"
+        ) as writer:
+
+            # Detailed findings
+            df.to_excel(
+                writer,
+                index=False,
+                sheet_name="Detailed Findings"
+            )
+
+            # Category summary
+            category_counts.to_excel(
+                writer,
+                index=False,
+                sheet_name="Category Summary"
+            )
+
+            # Keyword frequency
+            keyword_counts.to_excel(
+                writer,
+                index=False,
+                sheet_name="Keyword Frequency"
+            )
+
+            # Screening information
+            summary_df = pd.DataFrame({
+
+                "Information": [
+                    "File Name",
+                    "Total PDF Pages",
+                    "Keyword Matches",
+                    "Categories Flagged",
+                    "Pages with Matches",
+                    "Pages Without Extractable Text",
+                    "Screening Status"
+                ],
+
+                "Value": [
+                    st.session_state["screened_filename"],
+                    total_pages,
+                    len(results),
+                    matched_categories,
+                    matched_pages,
+                    len(empty_pages),
+                    "Pending Human Review"
+                ]
+
+            })
+
+            summary_df.to_excel(
+                writer,
+                index=False,
+                sheet_name="Screening Summary"
+            )
+
+        st.download_button(
+            label="📥 Download Complete Excel Report",
+            data=output.getvalue(),
+            file_name="BookGuard_UAE_Screening_Report.xlsx",
+            mime=(
+                "application/vnd.openxmlformats-"
+                "officedocument.spreadsheetml.sheet"
+            )
+        )
+
+    else:
+
+        st.info(
+            "No predefined keywords were detected "
+            "in the extractable text. This does not "
+            "confirm that the book is suitable or "
+            "free from potentially sensitive content."
+        )
+
+# ============================================================
+# 16. DISCLAIMER
+# ============================================================
 
 st.divider()
 
-st.caption(
-    "BookGuard UAE | Educational Resource Screening "
-    "| Human Review Required"
+st.warning(
+    "IMPORTANT DISCLAIMER: BookGuard UAE is a "
+    "keyword-based screening and review-support tool. "
+    "It is not an official UAE regulatory compliance "
+    "assessment system. All findings require "
+    "contextual human review. References to religion, "
+    "identity, disability, health, or other protected "
+    "characteristics do not themselves establish "
+    "inappropriate content."
 )
+
+st.caption(
+    "BookGuard UAE | Automated Educational Resource "
+    "Content Screening | Version 3.0"
+)
+
+# ============================================================
+# END OF APPLICATION
+# ============================================================
