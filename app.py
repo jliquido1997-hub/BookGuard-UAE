@@ -20,33 +20,12 @@ st.info(
 )
 
 keywords = {
-   # ============================================================
-# BOOKGUARD UAE
-# MASTER KEYWORD DATABASE - VERSION 2.0
-# 22 CONTENT SCREENING CATEGORIES
-# ============================================================
-#
-# Purpose:
-# Identify predefined words and phrases in PDF e-books
-# for contextual review by authorised school librarians.
-#
-# IMPORTANT:
-# Keyword matches do not establish that content is
-# inappropriate, prohibited, or non-compliant with UAE law.
-# Human review is required.
-# ============================================================
-
-
+  
 def make_keywords(text):
-    """
-    Convert comma-separated keywords into a Python list.
-    Remove duplicate entries within each category.
-    Preserve the original keyword wording.
-    """
-    return list(dict.fromkeys(
-        word.strip()
-        for word in text.split(",")
-        if word.strip()
+   return list (dict.fromkeys(
+        word.strip ()
+        for word in text.split (",")
+        if word.strip ()
     ))
 
 
