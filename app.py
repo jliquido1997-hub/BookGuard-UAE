@@ -19,10 +19,10 @@ ICON_PATH = Path(__file__).parent / "bookguard_icon.png"
 
 st.set_page_config(
     page_title="BookGuard UAE",
-    page_icon=str(ICON PATH) if ICON_PATH.exists() else "📚"
+    page_icon=str(ICON_PATH) if ICON_PATH.exists() else "📚"
     layout="wide"
 )
-if ICON_PATH.exist():
+if ICON_PATH.exists():
     st.image(str(ICON_PATH), width=150)
 
 st.title("BookGuard UAE")
