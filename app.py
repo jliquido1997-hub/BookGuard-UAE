@@ -10,6 +10,8 @@ import pandas as pd
 import re
 from io import BytesIO
 from collections import Counter
+from pathlib import Path
+ICON_PATH = Path(__file__).parent / "bookguard_icon.png"
 
 # ============================================================
 # 1. STREAMLIT PAGE CONFIGURATION
@@ -17,11 +19,13 @@ from collections import Counter
 
 st.set_page_config(
     page_title="BookGuard UAE",
-    page_icon="📚",
+    page_icon=str(ICON PATH) if ICON_PATH.exists() else "📚"
     layout="wide"
 )
+if ICON_PATH.exist():
+    st.image(str(ICON_PATH), width=150)
 
-st.title("📚 BookGuard UAE")
+st.title("BookGuard UAE")
 st.subheader("Automated E-Book Content Screening System")
 
 st.info(
