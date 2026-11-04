@@ -27,7 +27,6 @@ if ICON_PATH.exists():
 
 st.title("BookGuard UAE")
 st.subheader("Automated E-Book Content Screening System")
-
 st.info(
     "BookGuard UAE identifies predefined keywords and phrases "
     "in PDF e-books for contextual review by librarians. "
