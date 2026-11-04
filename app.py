@@ -963,14 +963,27 @@ if "results" in st.session_state:
 st.divider()
 
 st.warning(
-    "IMPORTANT DISCLAIMER: BookGuard UAE is a "
-    "keyword-based screening and review-support tool. "
-    "It is not an official UAE regulatory compliance "
-    "assessment system. All findings require "
-    "contextual human review. References to religion, "
-    "identity, disability, health, or other protected "
-    "characteristics do not themselves establish "
-    "inappropriate content."
+    "IMPORTANT DISCLAIMER & PROFESSIONAL USE NOTICE\n\n"
+    "BookGuard UAE is a keyword-based educational resource screening "
+    "and review-support platform intended exclusively for authorised "
+    "librarians and members of the School Curriculum Compliance Committee "
+    "in the United Arab Emirates (UAE).\n\n"
+    "The platform assists in identifying potentially sensitive words, "
+    "phrases, and themes in digital books and educational resources. "
+    "The detection of keywords does not automatically establish that "
+    "the material is inappropriate, unsuitable, or non-compliant "
+    "with UAE educational regulations.\n\n"
+    "All screening results are preliminary and require professional "
+    "contextual evaluation, considering age appropriateness, educational "
+    "value, cultural sensitivities, institutional policies, and "
+    "applicable UAE educational standards and regulations.\n\n"
+    "BookGuard UAE is an independent screening and review-support tool. "
+    "It is not affiliated with, endorsed by, or officially recognised "
+    "as a compliance assessment system by any UAE regulatory authority.\n\n"
+    "Final decisions regarding the approval, restriction, or removal "
+    "of educational resources remain the responsibility of authorised "
+    "librarians, the School Curriculum Compliance Committee, "
+    "and the relevant educational institution."
 )
 
 st.caption(
