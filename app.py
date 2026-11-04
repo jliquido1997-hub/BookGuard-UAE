@@ -1,6 +1,6 @@
 # ============================================================
 # BOOKGUARD UAE
-# Automated E-Book Content Screening System
+# Educational Resource Content Screening & Review Platform
 # Version 3.0
 # ============================================================
 
