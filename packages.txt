@@ -1,2 +1,2 @@
-pytesseract
-Pillow
+tesseract-ocr
+tesseract-ocr-eng
