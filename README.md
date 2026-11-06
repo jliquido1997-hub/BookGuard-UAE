@@ -1,3 +1,3 @@
 # BookGuard-UAE
-Educational Resource Content Screening & Review Platform
-Screen Smarter. Review Responsibly. Read Confidently.
+Automated E-Book Screening & Educational Resource
+Content Screening and Review Platform
