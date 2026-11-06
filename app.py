@@ -1,17 +1,22 @@
 # ============================================================
 # BOOKGUARD UAE
 # Educational Resource Content Screening & Review Platform
-# Version 3.0
+# Version 4.0 - OCR Integration
 # ============================================================
 
 import streamlit as st
 import pymupdf
 import pandas as pd
+import pytesseract
 import re
+
+from PIL import Image
 from io import BytesIO
-from collections import Counter
 from pathlib import Path
+
+
 ICON_PATH = Path(__file__).parent / "bookguard_icon.png"
+
 
 # ============================================================
 # 1. STREAMLIT PAGE CONFIGURATION
@@ -22,17 +27,21 @@ st.set_page_config(
     page_icon=str(ICON_PATH) if ICON_PATH.exists() else "📚",
     layout="wide"
 )
+
 if ICON_PATH.exists():
     st.image(str(ICON_PATH), width=150)
 
 st.title("BookGuard UAE")
+
 st.subheader("Automated E-Book Content Screening System")
+
 st.info(
     "BookGuard UAE identifies predefined keywords and phrases "
     "in PDF e-books for contextual review by librarians. "
     "Keyword matches do not establish that a book is "
     "inappropriate or non-compliant with UAE regulations."
 )
+
 
 # ============================================================
 # 2. KEYWORD PROCESSING FUNCTION
@@ -43,6 +52,7 @@ def make_keywords(text):
     Convert comma-separated text into a list of keywords.
     Remove duplicate entries within each category.
     """
+
     return list(dict.fromkeys(
         word.strip()
         for word in text.split(",")
@@ -88,10 +98,12 @@ keywords = {
     adultery, romance, romantic, romantic relationship,
     dating, date, crush, love affair, falling in love,
     marriage, married, wedding, divorce, separation,
-    homophobia, transphobia, gender discrimination
+    homophobia, transphobia, gender discrimination,
+    girly-friend, hugging, hug
     """),
 
     # CATEGORY 3
+
     # CATEGORY 4
     "4. Christmas, Holidays and Celebrations": make_keywords("""
     Christmas, Xmas, Santa Claus, Santa,
@@ -110,7 +122,9 @@ keywords = {
     Hanukkah, Hannukah, Chanukah, Passover,
     Purim, Yom Kippur, Rosh Hashanah,
     Sabbath, Shabbat, religious holiday,
-    religious festival, religious celebration
+    religious festival, religious celebration,
+    fiesta, festival, party, Virgin Mary,
+    rosary, rosaries, baptism
     """),
 
     # CATEGORY 5
@@ -201,6 +215,7 @@ keywords = {
     """),
 
     # CATEGORY 10
+
     # CATEGORY 11
     "11. Profanity, Insults and Offensive Language": make_keywords("""
     damn, damned, hell, bloody hell, shit,
@@ -215,7 +230,7 @@ keywords = {
     ethnic slur, derogatory language,
     offensive insult, profanity, swear words,
     swearing, cursing, curse word,
-    abusive language
+    abusive language, imbecile, jerk
     """),
 
     # CATEGORY 12
@@ -240,6 +255,7 @@ keywords = {
     """),
 
     # CATEGORY 13
+
     # CATEGORY 14
     "14. Pregnancy, Reproduction and Marriage": make_keywords("""
     pregnancy, pregnant, childbirth, labour,
@@ -396,7 +412,8 @@ keywords = {
     mystical creature, mythical hero,
     folklore, folk magic, legend,
     legendary creature, ancient deity,
-    underworld, sorcerer's apprentice
+    underworld, sorcerer's apprentice,
+    rainbow
     """),
 
     # CATEGORY 22
@@ -416,8 +433,8 @@ keywords = {
     poaching, slaughter, blood sport,
     animal fighting, animal experimentation
     """)
-
 }
+
 
 # ============================================================
 # 4. DATABASE STATISTICS
@@ -434,6 +451,7 @@ unique_keywords = len({
     for words in keywords.values()
     for word in words
 })
+
 
 # ============================================================
 # 5. SIDEBAR
@@ -483,6 +501,51 @@ with st.sidebar:
         "in the screening."
     )
 
+    # ========================================================
+    # OCR SETTINGS
+    # ========================================================
+
+    st.divider()
+
+    st.subheader("🔍 OCR Settings")
+
+    enable_ocr = st.checkbox(
+        "Enable OCR for scanned PDFs",
+        value=True,
+        help=(
+            "Uses optical character recognition to read "
+            "text from scanned PDF pages."
+        )
+    )
+
+    ocr_mode = st.radio(
+        "OCR Processing Mode",
+        options=[
+            "Automatic OCR",
+            "Full OCR"
+        ],
+        disabled=not enable_ocr,
+        help=(
+            "Automatic OCR processes pages with little or no "
+            "extractable text. Full OCR processes every page."
+        )
+    )
+
+    ocr_dpi = st.slider(
+        "OCR Image Resolution (DPI)",
+        min_value=100,
+        max_value=300,
+        value=200,
+        step=50,
+        disabled=not enable_ocr
+    )
+
+    st.caption(
+        "Full OCR may take longer, especially for "
+        "large scanned books and graphic novels."
+    )
+
+
 # ============================================================
 # 6. PDF UPLOAD
 # ============================================================
@@ -493,6 +556,7 @@ uploaded_file = st.file_uploader(
     "Select a PDF e-book for content screening",
     type=["pdf"]
 )
+
 
 # ============================================================
 # 7. KEYWORD MATCHING FUNCTION
@@ -520,17 +584,97 @@ def create_pattern(keyword):
 
 
 # ============================================================
-# 8. PDF SCREENING FUNCTION
+# 8. OCR TEXT EXTRACTION FUNCTION
+# ============================================================
+
+def extract_page_text(
+    page,
+    enable_ocr=True,
+    ocr_mode="Automatic OCR",
+    ocr_dpi=200
+):
+    """
+    Extract text from a PDF page.
+
+    Automatic OCR:
+        Uses normal extraction when enough selectable
+        text exists. Otherwise, attempts OCR.
+
+    Full OCR:
+        Uses OCR for every page.
+
+    Returns:
+        text, extraction_method
+    """
+
+    normal_text = page.get_text(
+        "text",
+        sort=True
+    )
+
+    if not enable_ocr:
+        return normal_text, "Standard PDF Extraction"
+
+    use_ocr = (
+        ocr_mode == "Full OCR"
+        or len(normal_text.strip()) < 50
+    )
+
+    if not use_ocr:
+        return normal_text, "Standard PDF Extraction"
+
+    try:
+
+        pix = page.get_pixmap(
+            dpi=ocr_dpi,
+            alpha=False
+        )
+
+        image_bytes = pix.tobytes("png")
+
+        image = Image.open(
+            BytesIO(image_bytes)
+        )
+
+        ocr_text = pytesseract.image_to_string(
+            image,
+            lang="eng",
+            config="--psm 3"
+        )
+
+        if ocr_text.strip():
+            return ocr_text, "OCR"
+
+        return normal_text, "Standard PDF Extraction (OCR Empty)"
+
+    except Exception as error:
+
+        st.warning(
+            f"OCR could not process PDF page "
+            f"{page.number + 1}: {error}"
+        )
+
+        return normal_text, "Standard PDF Extraction (OCR Failed)"
+
+
+# ============================================================
+# 9. PDF SCREENING FUNCTION
 # ============================================================
 
 def screen_pdf(
     pdf_bytes,
     selected_categories,
-    context_length
+    context_length,
+    enable_ocr=True,
+    ocr_mode="Automatic OCR",
+    ocr_dpi=200
 ):
 
     results = []
+
     empty_pages = []
+
+    ocr_pages = []
 
     with pymupdf.open(
         stream=pdf_bytes,
@@ -545,10 +689,15 @@ def screen_pdf(
 
             page = document[page_index]
 
-            text = page.get_text(
-                "text",
-                sort=True
+            text, extraction_method = extract_page_text(
+                page,
+                enable_ocr=enable_ocr,
+                ocr_mode=ocr_mode,
+                ocr_dpi=ocr_dpi
             )
+
+            if extraction_method == "OCR":
+                ocr_pages.append(page_index + 1)
 
             if not text.strip():
 
@@ -598,6 +747,8 @@ def screen_pdf(
 
                             "Context": context,
 
+                            "Extraction Method": extraction_method,
+
                             "Review Status": "Pending Review",
 
                             "Librarian Remarks": ""
@@ -608,11 +759,16 @@ def screen_pdf(
                 (page_index + 1) / total_pages
             )
 
-    return results, total_pages, empty_pages
+    return (
+        results,
+        total_pages,
+        empty_pages,
+        ocr_pages
+    )
 
 
 # ============================================================
-# 9. SCREENING INTERFACE
+# 10. SCREENING INTERFACE
 # ============================================================
 
 if uploaded_file is not None:
@@ -642,10 +798,18 @@ if uploaded_file is not None:
 
                     pdf_bytes = uploaded_file.getvalue()
 
-                    results, total_pages, empty_pages = screen_pdf(
+                    (
+                        results,
+                        total_pages,
+                        empty_pages,
+                        ocr_pages
+                    ) = screen_pdf(
                         pdf_bytes,
                         selected_categories,
-                        context_length
+                        context_length,
+                        enable_ocr,
+                        ocr_mode,
+                        ocr_dpi
                     )
 
                     st.session_state["results"] = results
@@ -653,6 +817,8 @@ if uploaded_file is not None:
                     st.session_state["total_pages"] = total_pages
 
                     st.session_state["empty_pages"] = empty_pages
+
+                    st.session_state["ocr_pages"] = ocr_pages
 
                     st.session_state["screened_filename"] = (
                         uploaded_file.name
@@ -663,13 +829,15 @@ if uploaded_file is not None:
                     st.error(
                         "The PDF could not be processed. "
                         "Check whether it is valid, encrypted, "
-                        "or password-protected."
+                        "or password-protected, and whether "
+                        "OCR dependencies are installed."
                     )
 
                     st.exception(error)
 
+
 # ============================================================
-# 10. SCREENING RESULTS
+# 11. SCREENING RESULTS
 # ============================================================
 
 if "results" in st.session_state:
@@ -679,6 +847,11 @@ if "results" in st.session_state:
     total_pages = st.session_state["total_pages"]
 
     empty_pages = st.session_state["empty_pages"]
+
+    ocr_pages = st.session_state.get(
+        "ocr_pages",
+        []
+    )
 
     st.divider()
 
@@ -728,12 +901,24 @@ if "results" in st.session_state:
             matched_pages
         )
 
+    st.metric(
+        "Pages Processed with OCR",
+        len(ocr_pages)
+    )
+
+    if ocr_pages:
+
+        st.info(
+            f"OCR successfully extracted text from "
+            f"{len(ocr_pages)} PDF page(s)."
+        )
+
     if empty_pages:
 
         st.warning(
             f"{len(empty_pages)} pages contained "
-            "no extractable text. These pages may "
-            "require OCR."
+            "no extractable text after processing. "
+            "These pages may require manual review."
         )
 
     if results:
@@ -741,7 +926,7 @@ if "results" in st.session_state:
         df = pd.DataFrame(results)
 
         # ====================================================
-        # 11. CATEGORY SUMMARY
+        # 12. CATEGORY SUMMARY
         # ====================================================
 
         st.subheader(
@@ -764,7 +949,7 @@ if "results" in st.session_state:
         )
 
         # ====================================================
-        # 12. MOST FREQUENT KEYWORDS
+        # 13. MOST FREQUENT KEYWORDS
         # ====================================================
 
         st.subheader(
@@ -790,7 +975,7 @@ if "results" in st.session_state:
         )
 
         # ====================================================
-        # 13. DETAILED RESULTS
+        # 14. DETAILED RESULTS
         # ====================================================
 
         st.subheader(
@@ -820,7 +1005,7 @@ if "results" in st.session_state:
         )
 
         # ====================================================
-        # 14. PAGE-BY-PAGE REVIEW
+        # 15. PAGE-BY-PAGE REVIEW
         # ====================================================
 
         st.subheader(
@@ -857,6 +1042,11 @@ if "results" in st.session_state:
                 )
 
                 st.write(
+                    "**Extraction Method:**",
+                    row["Extraction Method"]
+                )
+
+                st.write(
                     "**Context:**"
                 )
 
@@ -871,7 +1061,7 @@ if "results" in st.session_state:
                 )
 
         # ====================================================
-        # 15. EXCEL REPORT GENERATION
+        # 16. EXCEL REPORT GENERATION
         # ====================================================
 
         st.subheader(
@@ -886,6 +1076,7 @@ if "results" in st.session_state:
         ) as writer:
 
             # Detailed findings
+
             df.to_excel(
                 writer,
                 index=False,
@@ -893,6 +1084,7 @@ if "results" in st.session_state:
             )
 
             # Category summary
+
             category_counts.to_excel(
                 writer,
                 index=False,
@@ -900,6 +1092,7 @@ if "results" in st.session_state:
             )
 
             # Keyword frequency
+
             keyword_counts.to_excel(
                 writer,
                 index=False,
@@ -907,6 +1100,7 @@ if "results" in st.session_state:
             )
 
             # Screening information
+
             summary_df = pd.DataFrame({
 
                 "Information": [
@@ -916,6 +1110,7 @@ if "results" in st.session_state:
                     "Categories Flagged",
                     "Pages with Matches",
                     "Pages Without Extractable Text",
+                    "Pages Processed with OCR",
                     "Screening Status"
                 ],
 
@@ -926,6 +1121,7 @@ if "results" in st.session_state:
                     matched_categories,
                     matched_pages,
                     len(empty_pages),
+                    len(ocr_pages),
                     "Pending Human Review"
                 ]
 
@@ -937,10 +1133,32 @@ if "results" in st.session_state:
                 sheet_name="Screening Summary"
             )
 
+            # OCR page information
+
+            ocr_summary_df = pd.DataFrame({
+                "PDF Page Processed with OCR": ocr_pages
+            })
+
+            ocr_summary_df.to_excel(
+                writer,
+                index=False,
+                sheet_name="OCR Pages"
+            )
+
+        # ====================================================
+        # AUTOMATIC EXCEL FILENAME BASED ON UPLOADED PDF
+        # ====================================================
+
+        pdf_filename = st.session_state["screened_filename"]
+
+        pdf_title = Path(pdf_filename).stem
+
+        excel_filename = f"{pdf_title}_Screening_Report.xlsx"
+
         st.download_button(
             label="📥 Download Complete Excel Report",
             data=output.getvalue(),
-            file_name="BookGuard_UAE_Screening_Report.xlsx",
+            file_name=excel_filename,
             mime=(
                 "application/vnd.openxmlformats-"
                 "officedocument.spreadsheetml.sheet"
@@ -951,35 +1169,41 @@ if "results" in st.session_state:
 
         st.info(
             "No predefined keywords were detected "
-            "in the extractable text. This does not "
+            "in the extracted text. This does not "
             "confirm that the book is suitable or "
             "free from potentially sensitive content."
         )
 
+
 # ============================================================
-# 16. DISCLAIMER
+# 17. DISCLAIMER
 # ============================================================
 
 st.divider()
 
 st.warning(
     "IMPORTANT DISCLAIMER & PROFESSIONAL USE NOTICE\n\n"
+
     "BookGuard UAE is a keyword-based educational resource screening "
     "and review-support platform intended exclusively for authorised "
     "librarians and members of the School Curriculum Compliance Committee "
     "in the United Arab Emirates (UAE).\n\n"
+
     "The platform assists in identifying potentially sensitive words, "
     "phrases, and themes in digital books and educational resources. "
     "The detection of keywords does not automatically establish that "
     "the material is inappropriate, unsuitable, or non-compliant "
     "with UAE educational regulations.\n\n"
+
     "All screening results are preliminary and require professional "
     "contextual evaluation, considering age appropriateness, educational "
     "value, cultural sensitivities, institutional policies, and "
     "applicable UAE educational standards and regulations.\n\n"
+
     "BookGuard UAE is an independent screening and review-support tool. "
     "It is not affiliated with, endorsed by, or officially recognised "
     "as a compliance assessment system by any UAE regulatory authority.\n\n"
+
     "Final decisions regarding the approval, restriction, or removal "
     "of educational resources remain the responsibility of authorised "
     "librarians, the School Curriculum Compliance Committee, "
@@ -988,8 +1212,9 @@ st.warning(
 
 st.caption(
     "BookGuard UAE | Automated Educational Resource "
-    "Content Screening | Version 3.0"
+    "Content Screening | Version 4.0"
 )
+
 
 # ============================================================
 # END OF APPLICATION
