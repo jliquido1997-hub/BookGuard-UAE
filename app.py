@@ -15,7 +15,6 @@ from PIL import Image
 from io import BytesIO
 from pathlib import Path
 
-
 ICON_PATH = Path(__file__).parent / "bookguard_icon.png"
 
 
@@ -93,7 +92,9 @@ st.markdown(
 )
 
 if ICON_PATH.exists():
+
     with open(ICON_PATH, "rb") as image_file:
+
         encoded_logo = base64.b64encode(
             image_file.read()
         ).decode("utf-8")
@@ -102,8 +103,11 @@ if ICON_PATH.exists():
         f'<img src="data:image/png;base64,{encoded_logo}" '
         'class="bookguard-logo" alt="BookGuard UAE Logo">'
     )
+
 else:
+
     logo_html = '<span style="font-size:40px;">📚</span>'
+
 
 st.markdown(
     f"""
@@ -119,6 +123,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 st.info(
     "BookGuard UAE identifies predefined keywords and phrases "
@@ -146,30 +151,41 @@ def make_keywords(text):
 
 # ============================================================
 # 3. MASTER KEYWORD DATABASE
+# UPDATED: ALL 22 CATEGORIES AND ADDITIONAL KEYWORDS
 # ============================================================
 
 keywords = {
 
+    # ========================================================
     # CATEGORY 1
+    # ========================================================
+
     "1. Sexual Content and Nudity": make_keywords("""
     sex, sexual, sexuality, sexualised, sexualized,
     sexualisation, sexualization, naked, nude, nudity,
     breast, breasts, penis, vagina, genitalia, genitals,
-    private parts, erotic, erotica, intercourse, orgasm,
-    pornography, pornographic, seduction, seductive,
-    masturbation, arousal, foreplay, sexual fantasy,
-    sexual fantasies, underwear, lingerie, undergarments,
-    nakedness, fetish, kink, voyeurism, prostitution,
-    prostitute, stripper, strip club, incest, molestation,
-    grooming, paedophile, pedophile, paedophilia,
-    pedophilia, sexual exploitation, sexual abuse,
-    sexual assault, sexual harassment, sex trafficking,
-    human trafficking, coercion, explicit content,
-    adult content, explicit imagery, intimate touching,
-    inappropriate touching, indecent exposure
+    private parts, private part, erotic, erotica,
+    intercourse, orgasm, pornography, pornographic,
+    seduction, seductive, masturbation, arousal, foreplay,
+    sexual fantasy, sexual fantasies, underwear, lingerie,
+    undergarments, nakedness, fetish, kink, voyeurism,
+    prostitution, prostitute, stripper, strip club,
+    incest, molestation, grooming, paedophile, pedophile,
+    paedophilia, pedophilia, sexual exploitation,
+    sexual abuse, sexual assault, sexual harassment,
+    sex trafficking, human trafficking, coercion,
+    explicit content, adult content, explicit imagery,
+    intimate touching, inappropriate touching,
+    indecent exposure, lap dance, lap dancing,
+    sexy dance, sexy dancing, incestuous relationship,
+    sexual kinship relationship, zina al-maharim
     """),
 
+
+    # ========================================================
     # CATEGORY 2
+    # ========================================================
+
     "2. Relationships, Romance, Gender and LGBTQ+ Themes": make_keywords("""
     gay, lesbian, bisexual, homosexual, homosexuality,
     LGBTQ, LGBTQ+, LGBT, transgender, transsexual,
@@ -183,12 +199,50 @@ keywords = {
     dating, date, crush, love affair, falling in love,
     marriage, married, wedding, divorce, separation,
     homophobia, transphobia, gender discrimination,
-    girly-friend, hugging, hug
+    girly-friend, girly friend, hugging, hug, hugs,
+    hugged, friendly kiss, friendly kissing,
+    firendly kiss, smooch, smooches, smooching,
+    smooched, taboo relationship
     """),
 
-    # CATEGORY 3
 
+    # ========================================================
+    # CATEGORY 3 - RESTORED
+    # ========================================================
+
+    "3. Religion and Religious Sensitivity": make_keywords("""
+    Allah, God, gods, goddess, deity, divine,
+    Quran, Qur'an, Koran, Islam, Islamic, Muslim,
+    Prophet Muhammad, prophet, prophecy, prayer,
+    pray, praying, worship, worshipping, scripture,
+    sacred, holy, holiness, blessing, blessed,
+    blasphemy, blasphemous, atheist, atheism,
+    apostasy, heresy, sacrilege, idolatry, idol,
+    religious conversion, religious criticism,
+    religious satire, religious insult,
+    religious discrimination, religious symbol,
+    religious clothing, religious ceremony,
+    religious ritual, proselytising, proselytizing,
+    polytheism, monotheism, temple, mosque, church,
+    chapel, cathedral, shrine, monastery, altar,
+    priest, pastor, minister, monk, nun, rabbi,
+    imam, preacher, sermon, chanting, chant, chanted,
+    hymn, hymns, miracle, omen, evil, devil, Satan,
+    satanic, demon, witchcraft, occult, paganism,
+    pagan, Christianity, Christian, Catholic,
+    Protestant, Bible, New Testament, Old Testament,
+    Hinduism, Hindu, Buddhism, Buddhist, Sikhism,
+    Sikh, Jainism, Jain, Mormon, Jehovah's Witness,
+    sectarianism, religious extremism, mock, mocked,
+    mocking, mockery, ridicule, religious mockery,
+    Virgin Mary, rosary, rosaries, baptism
+    """),
+
+
+    # ========================================================
     # CATEGORY 4
+    # ========================================================
+
     "4. Christmas, Holidays and Celebrations": make_keywords("""
     Christmas, Xmas, Santa Claus, Santa,
     Father Christmas, Saint Nicholas,
@@ -207,11 +261,17 @@ keywords = {
     Purim, Yom Kippur, Rosh Hashanah,
     Sabbath, Shabbat, religious holiday,
     religious festival, religious celebration,
-    fiesta, festival, party, Virgin Mary,
-    rosary, rosaries, baptism
+    fiesta, festival, party, parties,
+    bridal shower, bridal showers,
+    bachelor's party, bachelor party,
+    bachelor parties
     """),
 
+
+    # ========================================================
     # CATEGORY 5
+    # ========================================================
+
     "5. Judaism, Jewish Identity, Israel and Regional Political References": make_keywords("""
     Judaism, Jewish, Jew, Jews, Israel, Israeli,
     Jerusalem, Zionism, Zionist, Zionists,
@@ -227,7 +287,11 @@ keywords = {
     settlement, territorial dispute
     """),
 
+
+    # ========================================================
     # CATEGORY 6
+    # ========================================================
+
     "6. Animals, Pork and Dietary Restrictions": make_keywords("""
     pig, pigs, piglet, piglets, piggy, pigsty,
     pork, bacon, ham, ham sandwich, ham hock,
@@ -242,7 +306,11 @@ keywords = {
     dietary restriction, animal slaughter
     """),
 
+
+    # ========================================================
     # CATEGORY 7
+    # ========================================================
+
     "7. Drugs, Alcohol, Tobacco and Smoking": make_keywords("""
     alcohol, alcoholic, alcohol consumption,
     wine, beer, ale, lager, cider, whiskey,
@@ -266,7 +334,11 @@ keywords = {
     narcotics, fermentation
     """),
 
+
+    # ========================================================
     # CATEGORY 8
+    # ========================================================
+
     "8. Cannibalism, Body Horror and Disturbing Content": make_keywords("""
     cannibal, cannibals, cannibalism, cannibalistic,
     human flesh, eating human flesh, human sacrifice,
@@ -280,7 +352,11 @@ keywords = {
     skeleton, skull, bones, burial remains
     """),
 
+
+    # ========================================================
     # CATEGORY 9
+    # ========================================================
+
     "9. Diseases, Viruses and Public Health": make_keywords("""
     COVID, COVID-19, coronavirus, SARS-CoV-2,
     pandemic, epidemic, HIV, AIDS, HIV-positive,
@@ -298,9 +374,47 @@ keywords = {
     organ transplant
     """),
 
-    # CATEGORY 10
 
+    # ========================================================
+    # CATEGORY 10 - RESTORED
+    # ========================================================
+
+    "10. Violence, Weapons, War and Crime": make_keywords("""
+    murder, murderer, murdered, kill, killed,
+    killer, killing, blood, bloody, bloodshed,
+    gore, gory, torture, tortured, rape,
+    sexual assault, abuse, physical abuse,
+    suicide, suicidal, self-harm, cutting,
+    gun, pistol, rifle, shotgun, firearm,
+    bullet, ammunition, knife, dagger, sword,
+    blade, stabbing, stabbed, shooting, shot,
+    bomb, bombing, explosion, explosive,
+    terrorism, terrorist, extremism,
+    radicalisation, radicalization, war,
+    warfare, battle, battlefield, military,
+    soldier, combat, fighting, fight, attack,
+    attacked, assault, violence, violent,
+    landmine, grenade, missile, chemical weapon,
+    biological weapon, nuclear weapon, genocide,
+    war crime, hostage, kidnapping, abducted,
+    abduction, execution, assassination,
+    strangulation, beating, domestic abuse,
+    child exploitation, coercion, threat,
+    threatening, blackmail, harassment,
+    honour killing, honor killing, massacre,
+    slaughter, mutilation, revenge,
+    revenge killing, poison, poisoned, poisoning,
+    drowning, suffocation, imprisonment,
+    prison, jail, criminal, crime, theft,
+    robbery, stealing, burglar, burglary,
+    vandalism
+    """),
+
+
+    # ========================================================
     # CATEGORY 11
+    # ========================================================
+
     "11. Profanity, Insults and Offensive Language": make_keywords("""
     damn, damned, hell, bloody hell, shit,
     bullshit, fuck, fucking, bitch, bastard,
@@ -314,10 +428,17 @@ keywords = {
     ethnic slur, derogatory language,
     offensive insult, profanity, swear words,
     swearing, cursing, curse word,
-    abusive language, imbecile, jerk
+    abusive language, imbecile, jerk,
+    kalb, himar, ahmaq, ghabiy, ya khara,
+    kuss ummak, ibn kalb, shamouta, khara,
+    qalil adab, alla yel'anak, ya majnun
     """),
 
+
+    # ========================================================
     # CATEGORY 12
+    # ========================================================
+
     "12. Political and Ideological Content": make_keywords("""
     communism, communist, fascism, fascist,
     Nazism, Nazi, Hitler, extremist, radical,
@@ -338,9 +459,54 @@ keywords = {
     coup, civil war, political conflict
     """),
 
-    # CATEGORY 13
 
+    # ========================================================
+    # CATEGORY 13 - RESTORED
+    # ========================================================
+
+    "13. Occult, Paranormal, Fortune-Telling and Supernatural Themes": make_keywords("""
+    spell, spells, spellbook, spellcasting,
+    witch, witches, witchcraft, wizard, wizardry,
+    warlock, sorcerer, sorceress, sorcery,
+    magician, magic, magical, enchantment,
+    enchanted, enchantress, charm, charms,
+    potion, potions, magic wand, wand, broomstick,
+    demon, demonic, devil, Satan, satanic,
+    evil, evil spirit, evil eye, evil force,
+    dark force, dark magic, summoning, summon,
+    ritual, rituals, chanting, chant, chanted,
+    incantation, incantations, necromancy,
+    exorcism, possession, possessed, voodoo,
+    hoodoo, black magic, white magic, dark arts,
+    occult, occultism, fortune teller,
+    fortune-teller, fortune telling,
+    fortune-telling, fortuneteller, psychic,
+    psychic reading, palm reading, palmistry,
+    tarot, tarot cards, crystal ball, divination,
+    soothsayer, seer, clairvoyant, medium,
+    mediumship, séance, seance, channeling,
+    channelling, astrology, astrologer,
+    horoscope, zodiac, star sign, omen, omens,
+    prophecy, prophecy reading, prediction,
+    supernatural, paranormal, supernatural power,
+    supernatural being, supernatural creature,
+    spirit, spirits, spirit world, ghost, ghosts,
+    ghostly, haunted, haunting, haunt, phantom,
+    apparition, poltergeist, spectre, specter,
+    banshee, vampire, werewolf, zombie, undead,
+    monster, monstrous, curse, cursed, curses,
+    hex, hexed, jinx, jinxed, superstition,
+    superstitious, talisman, amulet, mystical,
+    mysticism, mythology, mythological god,
+    goddess, afterlife, reincarnation,
+    resurrection, near-death experience
+    """),
+
+
+    # ========================================================
     # CATEGORY 14
+    # ========================================================
+
     "14. Pregnancy, Reproduction and Marriage": make_keywords("""
     pregnancy, pregnant, childbirth, labour,
     labor, giving birth, abortion, contraception,
@@ -357,7 +523,11 @@ keywords = {
     underage marriage, reproductive rights
     """),
 
+
+    # ========================================================
     # CATEGORY 15
+    # ========================================================
+
     "15. Death, Grief and the Afterlife": make_keywords("""
     death, dying, die, died, dead, dead body,
     deceased, funeral, burial, buried, bury,
@@ -374,7 +544,11 @@ keywords = {
     tragic death, sacrifice
     """),
 
+
+    # ========================================================
     # CATEGORY 16
+    # ========================================================
+
     "16. Gambling and Financial Misconduct": make_keywords("""
     gambling, gamble, gambler, casino,
     betting, bet, wager, lottery, raffle,
@@ -389,7 +563,11 @@ keywords = {
     financial misconduct, illegal betting
     """),
 
+
+    # ========================================================
     # CATEGORY 17
+    # ========================================================
+
     "17. Family, Abuse, Bullying and Social Issues": make_keywords("""
     child abuse, domestic violence, domestic abuse,
     bullying, bully, bullied, harassment,
@@ -408,10 +586,17 @@ keywords = {
     teasing, teased, taunting, intimidation,
     victimisation, victimization,
     social exclusion, exclusion, peer pressure,
-    cruelty, cruel, prejudice, prejudiced
+    cruelty, cruel, prejudice, prejudiced,
+    consanguinity, kinship, taboo relationship,
+    incestuous relationship, sexual kinship relationship,
+    aq al-maharim
     """),
 
+
+    # ========================================================
     # CATEGORY 18
+    # ========================================================
+
     "18. Health, Mental Health and Bodily Functions": make_keywords("""
     mental illness, mental health, depression,
     depressed, anxiety, anxious, panic attack,
@@ -432,7 +617,11 @@ keywords = {
     wound, wound infection
     """),
 
+
+    # ========================================================
     # CATEGORY 19
+    # ========================================================
+
     "19. Cultural, Racial, Ethnic and Identity Sensitivities": make_keywords("""
     cultural appropriation, religious satire,
     stereotype, stereotyping, sacred object,
@@ -454,7 +643,11 @@ keywords = {
     offensive cultural description
     """),
 
+
+    # ========================================================
     # CATEGORY 20
+    # ========================================================
+
     "20. Additional Sensitive References and Mature Themes": make_keywords("""
     seductive, explicit imagery, adult themes,
     mature themes, inappropriate content,
@@ -476,7 +669,11 @@ keywords = {
     controversial subject, sensitive topic
     """),
 
+
+    # ========================================================
     # CATEGORY 21
+    # ========================================================
+
     "21. Additional Fiction, Fairy-Tale and Folklore Screening Terms": make_keywords("""
     fairy, fairies, fairy godmother, fairy tale,
     faerie, faery, elf, elves, goblin, goblins,
@@ -500,7 +697,11 @@ keywords = {
     rainbow
     """),
 
+
+    # ========================================================
     # CATEGORY 22
+    # ========================================================
+
     "22. Additional Cultural and Behavioural Screening Terms": make_keywords("""
     disrespect, disrespectful, insult, insulting,
     mock, mocking, mockery, ridicule, blaspheme,
@@ -517,6 +718,7 @@ keywords = {
     poaching, slaughter, blood sport,
     animal fighting, animal experimentation
     """)
+
 }
 
 
@@ -697,6 +899,7 @@ def extract_page_text(
     )
 
     if not enable_ocr:
+
         return normal_text, "Standard PDF Extraction"
 
     use_ocr = (
@@ -705,6 +908,7 @@ def extract_page_text(
     )
 
     if not use_ocr:
+
         return normal_text, "Standard PDF Extraction"
 
     try:
@@ -727,6 +931,7 @@ def extract_page_text(
         )
 
         if ocr_text.strip():
+
             return ocr_text, "OCR"
 
         return normal_text, "Standard PDF Extraction (OCR Empty)"
@@ -781,6 +986,7 @@ def screen_pdf(
             )
 
             if extraction_method == "OCR":
+
                 ocr_pages.append(page_index + 1)
 
             if not text.strip():
@@ -1267,27 +1473,22 @@ st.divider()
 
 st.warning(
     "IMPORTANT DISCLAIMER & PROFESSIONAL USE NOTICE\n\n"
-
     "BookGuard UAE is a keyword-based educational resource screening "
     "and review-support platform intended exclusively for authorised "
     "librarians and members of the School Curriculum Compliance Committee "
     "in the United Arab Emirates (UAE).\n\n"
-
     "The platform assists in identifying potentially sensitive words, "
     "phrases, and themes in digital books and educational resources. "
     "The detection of keywords does not automatically establish that "
     "the material is inappropriate, unsuitable, or non-compliant "
     "with UAE educational regulations.\n\n"
-
     "All screening results are preliminary and require professional "
     "contextual evaluation, considering age appropriateness, educational "
     "value, cultural sensitivities, institutional policies, and "
     "applicable UAE educational standards and regulations.\n\n"
-
     "BookGuard UAE is an independent screening and review-support tool. "
     "It is not affiliated with, endorsed by, or officially recognised "
     "as a compliance assessment system by any UAE regulatory authority.\n\n"
-
     "Final decisions regarding the approval, restriction, or removal "
     "of educational resources remain the responsibility of authorised "
     "librarians, the School Curriculum Compliance Committee, "
