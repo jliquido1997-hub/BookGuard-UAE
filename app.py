@@ -9,6 +9,7 @@ import pymupdf
 import pandas as pd
 import pytesseract
 import re
+import base64
 
 from PIL import Image
 from io import BytesIO
@@ -28,12 +29,96 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# ============================================================
+# 1A. CENTRED LOGO, TITLE AND SUBHEADER
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+    .bookguard-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        margin-top: 15px;
+        margin-bottom: 8px;
+    }
+
+    .bookguard-logo {
+        width: 65px;
+        height: auto;
+        flex-shrink: 0;
+    }
+
+    .bookguard-title {
+        font-size: 46px;
+        font-weight: 750;
+        color: #1B5E20;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .bookguard-subtitle {
+        text-align: center;
+        font-size: 21px;
+        font-weight: 500;
+        margin-top: 12px;
+        margin-bottom: 28px;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+        .bookguard-header {
+            gap: 10px;
+        }
+
+        .bookguard-logo {
+            width: 45px;
+        }
+
+        .bookguard-title {
+            font-size: 29px;
+        }
+
+        .bookguard-subtitle {
+            font-size: 16px;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 if ICON_PATH.exists():
-    st.image(str(ICON_PATH), width=150)
+    with open(ICON_PATH, "rb") as image_file:
+        encoded_logo = base64.b64encode(
+            image_file.read()
+        ).decode("utf-8")
 
-st.title("BookGuard UAE")
+    logo_html = (
+        f'<img src="data:image/png;base64,{encoded_logo}" '
+        'class="bookguard-logo" alt="BookGuard UAE Logo">'
+    )
+else:
+    logo_html = '<span style="font-size:40px;">📚</span>'
 
-st.subheader("Automated E-Book Content Screening System")
+st.markdown(
+    f"""
+    <div class="bookguard-header">
+        {logo_html}
+        <h1 class="bookguard-title">BookGuard UAE</h1>
+    </div>
+
+    <div class="bookguard-subtitle">
+        Automated E-Book &amp; Educational Resource
+        Content Screening and Review Platform
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.info(
     "BookGuard UAE identifies predefined keywords and phrases "
@@ -52,7 +137,6 @@ def make_keywords(text):
     Convert comma-separated text into a list of keywords.
     Remove duplicate entries within each category.
     """
-
     return list(dict.fromkeys(
         word.strip()
         for word in text.split(",")
